@@ -1,6 +1,7 @@
 import os
 from pyramid.httpexceptions import HTTPFound
 import urllib
+from urlparse import urlparse, urlunparse
 from factored.plugins import getFactoredPlugin, getFactoredPlugins
 from factored.plugins import getPluginForRequest
 
@@ -16,9 +17,14 @@ class AuthView(object):
 
 
 def notfound(req):
+    # make sure the scheme stays as configured
+    urlparts = list(urlparse(req.url))
+    urlparts[0] = req.environ.get('referrer.url_scheme', 'http')
+    url = urlunparse(urlparts)
+
     return HTTPFound(location="%s?%s" % (
         req.registry['settings']['base_auth_url'],
-        urllib.urlencode({'referrer': req.url})))
+        urllib.urlencode({'referrer': url})))
 
 
 def auth_chooser(req):

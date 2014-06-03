@@ -51,7 +51,6 @@ def normalize_settings(settings):
 
 
 class Authenticator(object):
-
     def __init__(self, *args, **settings):
         if len(args) == 1:
             # regular app
@@ -127,6 +126,7 @@ class Authenticator(object):
 
     def initialize_settings(self, app, settings):
         self.app = app
+        self.scheme = settings.get('urlscheme', 'http')
         self.appname = settings.pop('appname', 'REPLACEME')
         self.supported_auth_schemes = _tolist(
             settings.pop('supported_auth_schemes', "Google Auth"))
@@ -151,6 +151,7 @@ class Authenticator(object):
         def wrapped_app(environ2, start_response2):
             auth = AuthTktAuthenticator(self.auth_tkt_policy, environ2)
             environ2['auth'] = auth
+            environ2['referrer.url_scheme'] = self.scheme
             if auth.authenticate():
                 if self.app is not None:
                     # if this is a filter, we can pass on to the actual app
@@ -160,8 +161,7 @@ class Authenticator(object):
 
 
 class SimpleProxy(object):
-
-    def __init__(self, global_config, server, port, urlscheme=None):
+    def __init__(self, global_config, server, port, urlscheme='http'):
         self.server = server
         self.port = port
         self.scheme = urlscheme
